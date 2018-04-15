@@ -1,0 +1,10 @@
+labels - names for columns, for measures
+activitynames_test - names for rows, for activities, test set
+activitynames_train - names for rows, for activities, train set
+test - data set with test data
+train - data set with train data
+subject_test - data set include numbers for subject from test set
+subject_train - data set include numbers for subject from train set
+common_set - data set with merged data from test and train sets
+mean_and_sd - data set with mean and standart deviation for each measurement
+common_meanvalues - data set, grouped by subject and activity type, containing mean values for each measurement
