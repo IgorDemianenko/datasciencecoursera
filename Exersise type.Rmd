@@ -1,0 +1,72 @@
+# The type of doing exercise
+
+In this paper is presented the model to determine a type of performing a physical exercise with a dumbbell. The model is based on information collected by the sensors during the exercise.
+
+For the construction of the model used training data set and a test data set of 20 observations for final check of the model.
+
+After the download, an exploratory data analysis was performed, which showed that for each observation there are 160 variables, on of which is target. 
+
+The task is to predict the value of the target variable. The target variable (classe) can take only five different values: A B C D E, therefore, suppose that in this case we have to solve the classification task. To solve such tasks, the method of learning trees is usually used.
+
+Also, an exploratory analysis showed that 160 variables contain many missing (NA) values. In the end it will be necessary to predict target variable in test set of 20 observation, therefore, the exploratory analysis was performed for this set too.
+
+Analysis showed that in the test sample, 100 variables contain only NA values, therefore these variables will not help in predicting the values of the target variable in test data set, so it can be removed from the training set.
+
+I also removed time and window type variables, because the meaning of the first one is not clear, and the second one obviously does not affect a value of the target variable.
+
+As a result, 54 variables remained, on of which is target.
+
+
+
+Loading data and removing empty variables
+```{r, message=FALSE}
+data <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
+test <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
+cnames <- colnames(test[,is.na(test[1,])])
+test_clear <- test[,!names(test) %in% cnames]
+test_clear <- test_clear[,-c(1)]
+test_clear <- test_clear[,-c(2,3,4,5,6)]
+names(test_clear)[54] <- "classe"
+data1 <- data[,names(test_clear)]
+```
+
+Separation of training data set on training and testing part
+```{r}
+library(caret)
+set.seed(3435)
+inTrain <- createDataPartition(y=data1$classe, p=0.7, list = FALSE)
+training <- data1[inTrain,]
+testing <- data1[-inTrain,]
+```
+
+Try to build a learning tree using cross-validation method with 30 different values of the penalty for the complexity and 3 repetition.
+
+```{r}
+control <- trainControl(method = "repeatedcv", repeats = 3)
+modfit <- train(classe~., data=training, method="rpart", tuneLength=30, trControl=control)
+plot(modfit)
+modfit
+```
+
+By the constructed model, it can be seen that the best value value of the accuracy of the tree is slightly more than 80%
+
+
+Check the resulting model on a testing set and estimate a prediction accuracy
+```{r}
+pred <- predict(modfit, newdata = testing)
+testing$predRight <- pred == testing$classe
+table(pred, testing$classe)
+table(testing$classe, testing$predRight)
+table(testing$classe)
+c<-table(testing$classe, testing$predRight)
+x<-t(t(table(testing$classe)))
+c <- cbind(c,x)
+colnames(c)[3]<-"All"
+true_percent <- c[,2]/c[,3]
+c<-cbind(c, true_percent)
+c
+```
+
+It can be seen that the best result is for type A events - more than 90%, worst - for type B events - about 70%, and an overall accuracy is about 80%.
+
+
